@@ -24,6 +24,18 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	// Validate email không được để trống
+	if user.Email == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Email không được để trống"})
+		return
+	}
+
+	// Kiểm tra email đã tồn tại chưa
+	existingUser, err := h.repo.FindByEmail(user.Email)
+	if err == nil && existingUser != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Email đã tồn tại"})
+		return
+	}
 
 	if err := h.repo.Create(&user); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể tạo user"})
@@ -44,8 +56,8 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	user, err := h.repo.FindByEmail(loginData.Email)
-	if err != nil {
+	user, findErr := h.repo.FindByEmail(loginData.Email)
+	if findErr != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Email hoặc password không đúng"})
 		return
 	}
@@ -55,8 +67,8 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	token, err := utils.GenerateToken(user)
-	if err != nil {
+	token, tokenErr := utils.GenerateToken(user)
+	if tokenErr != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể tạo token"})
 		return
 	}
