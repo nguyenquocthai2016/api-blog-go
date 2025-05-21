@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"api-blog-go/internal/config"
 	"api-blog-go/internal/models"
 	"fmt"
 	"time"
@@ -8,8 +9,11 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-var secretKey = []byte("OHVMeKeZXFMs") // Nên đặt trong biến môi trường
-
+var secretKey []byte // Nên đặt trong biến môi trường
+func init() {
+	config.LoadEnv()
+	secretKey = []byte(config.GetEnv("JWT_KEY", ""))
+}
 func GenerateToken(user *models.User) (string, error) {
 	// Đảm bảo user.ID là uint
 	claims := jwt.MapClaims{
